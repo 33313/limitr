@@ -6,6 +6,14 @@ INSERT INTO api_keys (
 )
 RETURNING *;
 
+-- name: GetKeyById :one
+SELECT * FROM api_keys
+WHERE id = $1;
+
+-- name: GetKeyByHash :one
+SELECT * FROM api_keys
+WHERE hashed_key = $1;
+
 -- name: ListKeys :many
 SELECT * FROM api_keys
 ORDER BY created_at DESC;

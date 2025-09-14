@@ -47,6 +47,40 @@ func (q *Queries) DeleteKey(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const getKeyByHash = `-- name: GetKeyByHash :one
+SELECT id, hashed_key, limit_per_minute, created_at FROM api_keys
+WHERE hashed_key = $1
+`
+
+func (q *Queries) GetKeyByHash(ctx context.Context, hashedKey string) (ApiKey, error) {
+	row := q.db.QueryRow(ctx, getKeyByHash, hashedKey)
+	var i ApiKey
+	err := row.Scan(
+		&i.ID,
+		&i.HashedKey,
+		&i.LimitPerMinute,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getKeyById = `-- name: GetKeyById :one
+SELECT id, hashed_key, limit_per_minute, created_at FROM api_keys
+WHERE id = $1
+`
+
+func (q *Queries) GetKeyById(ctx context.Context, id pgtype.UUID) (ApiKey, error) {
+	row := q.db.QueryRow(ctx, getKeyById, id)
+	var i ApiKey
+	err := row.Scan(
+		&i.ID,
+		&i.HashedKey,
+		&i.LimitPerMinute,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const listKeys = `-- name: ListKeys :many
 SELECT id, hashed_key, limit_per_minute, created_at FROM api_keys
 ORDER BY created_at DESC
