@@ -115,5 +115,5 @@ func main() {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	http.ListenAndServe(":3000", r)
+	http.ListenAndServe(fmt.Sprintf(":%v", os.Getenv("PORT")), r)
 }
