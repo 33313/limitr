@@ -1,16 +1,21 @@
 FROM golang:1.25-alpine AS build
+RUN apk add --no-cache git
 
 WORKDIR /app
-
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o limitr .
+RUN go install github.com/pressly/goose/v3/cmd/goose@latest
 
-RUN go build -o main cmd/api/main.go
 
-FROM alpine:latest AS prod
+FROM alpine:latest
+
 WORKDIR /app
-COPY --from=build /app/main /app/main
+COPY --from=build /app/limitr .
+COPY --from=build /go/bin/goose /usr/local/bin/goose
+COPY ./sql/migrations ./sql/migrations
+
 EXPOSE ${PORT}
-CMD ["./main"]
+CMD ["./limitr"]

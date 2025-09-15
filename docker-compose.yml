@@ -1,5 +1,6 @@
 services:
   app:
+    container_name: limitr_app
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,17 +10,18 @@ services:
     environment:
       PORT: ${PORT}
       DB_PORT: ${DB_PORT}
-      DB_HOST: ${DB_HOST}
+      DB_HOST: postgres
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_SCHEMA: ${DB_SCHEMA}
     depends_on:
-      psql:
+      postgres:
         condition: service_healthy
     networks:
       - limitr
-  psql:
+  postgres:
+    container_name: limitr_pg
     image: postgres:latest
     restart: unless-stopped
     environment:
@@ -29,7 +31,7 @@ services:
     ports:
       - "${DB_PORT}:5432"
     volumes:
-      - psql_volume:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test:
         ["CMD-SHELL", "sh -c 'pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}'"]
@@ -40,12 +42,13 @@ services:
     networks:
       - limitr
   redis:
+    container_name: limitr_redis
     image: redis:latest
     restart: unless-stopped
     ports:
       - "${REDIS_PORT}:6379"
     volumes:
-      - redis_volume:/data
+      - redisdata:/data
     healthcheck:
       test:
         ["CMD-SHELL", "redis-cli ping || exit 1"]
@@ -55,9 +58,23 @@ services:
       start_period: 15s
     networks:
       - limitr
+  migrate:
+    container_name: limitr_migrate
+    build: .
+    depends_on:
+      - postgres
+    environment:
+      GOOSE_MIGRATION_DIR: "./sql/migrations"
+      GOOSE_DBSTRING: "postgres://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}?sslmode=disable"
+      GOOSE_DRIVER: "postgres"
+    command: >
+      goose up
+    networks:
+      - limitr
+
 
 volumes:
-  psql_volume:
-  redis_volume:
+  pgdata:
+  redisdata:
 networks:
   limitr:
