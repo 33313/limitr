@@ -12,6 +12,10 @@ run: build
 	@echo 'Starting...'
 	@./limitr
 
+docker-run:
+	@echo 'Starting Docker...'
+	@docker compose up
+
 test:
 	@echo "Testing..."
 	@go test ./... -v
