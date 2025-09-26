@@ -4,6 +4,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     restart: unless-stopped
     ports:
       - ${PORT}:${PORT}
@@ -15,9 +18,8 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_SCHEMA: ${DB_SCHEMA}
-    depends_on:
-      postgres:
-        condition: service_healthy
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
     networks:
       - limitr
   postgres:
@@ -50,8 +52,7 @@ services:
     volumes:
       - redisdata:/data
     healthcheck:
-      test:
-        ["CMD-SHELL", "redis-cli ping || exit 1"]
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 3
@@ -62,7 +63,8 @@ services:
     container_name: limitr_migrate
     build: .
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       GOOSE_MIGRATION_DIR: "./sql/migrations"
       GOOSE_DBSTRING: "postgres://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}?sslmode=disable"
@@ -71,7 +73,6 @@ services:
       goose up
     networks:
       - limitr
-
 
 volumes:
   pgdata:

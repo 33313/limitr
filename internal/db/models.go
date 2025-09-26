@@ -9,8 +9,9 @@ import (
 )
 
 type ApiKey struct {
-	ID             pgtype.UUID
-	HashedKey      string
-	LimitPerMinute int32
-	CreatedAt      pgtype.Timestamp
+	ID                pgtype.UUID
+	HashedKey         string
+	WindowSizeSeconds int32
+	RequestsPerWindow int32
+	CreatedAt         pgtype.Timestamp
 }

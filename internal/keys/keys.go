@@ -1,4 +1,4 @@
-package api
+package keys
 
 import (
 	"crypto/rand"
@@ -7,12 +7,12 @@ import (
 	"encoding/hex"
 )
 
-func HashAPIKey(key string) string {
+func HashKey(key string) string {
 	hash := sha256.Sum256([]byte(key))
 	return hex.EncodeToString(hash[:])
 }
 
-func GenerateAPIKey() (string, error) {
+func GenerateKey() (string, error) {
 	length := 24
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {

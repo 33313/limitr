@@ -1,8 +1,8 @@
 -- name: CreateKey :one
 INSERT INTO api_keys (
-    hashed_key, limit_per_minute
+    hashed_key, window_size_seconds, requests_per_window
 ) VALUES (
-    $1, $2
+    $1, $2, $3
 )
 RETURNING *;
 

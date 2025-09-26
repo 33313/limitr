@@ -13,25 +13,27 @@ import (
 
 const createKey = `-- name: CreateKey :one
 INSERT INTO api_keys (
-    hashed_key, limit_per_minute
+    hashed_key, window_size_seconds, requests_per_window
 ) VALUES (
-    $1, $2
+    $1, $2, $3
 )
-RETURNING id, hashed_key, limit_per_minute, created_at
+RETURNING id, hashed_key, window_size_seconds, requests_per_window, created_at
 `
 
 type CreateKeyParams struct {
-	HashedKey      string
-	LimitPerMinute int32
+	HashedKey         string
+	WindowSizeSeconds int32
+	RequestsPerWindow int32
 }
 
 func (q *Queries) CreateKey(ctx context.Context, arg CreateKeyParams) (ApiKey, error) {
-	row := q.db.QueryRow(ctx, createKey, arg.HashedKey, arg.LimitPerMinute)
+	row := q.db.QueryRow(ctx, createKey, arg.HashedKey, arg.WindowSizeSeconds, arg.RequestsPerWindow)
 	var i ApiKey
 	err := row.Scan(
 		&i.ID,
 		&i.HashedKey,
-		&i.LimitPerMinute,
+		&i.WindowSizeSeconds,
+		&i.RequestsPerWindow,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -48,7 +50,7 @@ func (q *Queries) DeleteKey(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getKeyByHash = `-- name: GetKeyByHash :one
-SELECT id, hashed_key, limit_per_minute, created_at FROM api_keys
+SELECT id, hashed_key, window_size_seconds, requests_per_window, created_at FROM api_keys
 WHERE hashed_key = $1
 `
 
@@ -58,14 +60,15 @@ func (q *Queries) GetKeyByHash(ctx context.Context, hashedKey string) (ApiKey, e
 	err := row.Scan(
 		&i.ID,
 		&i.HashedKey,
-		&i.LimitPerMinute,
+		&i.WindowSizeSeconds,
+		&i.RequestsPerWindow,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getKeyById = `-- name: GetKeyById :one
-SELECT id, hashed_key, limit_per_minute, created_at FROM api_keys
+SELECT id, hashed_key, window_size_seconds, requests_per_window, created_at FROM api_keys
 WHERE id = $1
 `
 
@@ -75,14 +78,15 @@ func (q *Queries) GetKeyById(ctx context.Context, id pgtype.UUID) (ApiKey, error
 	err := row.Scan(
 		&i.ID,
 		&i.HashedKey,
-		&i.LimitPerMinute,
+		&i.WindowSizeSeconds,
+		&i.RequestsPerWindow,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const listKeys = `-- name: ListKeys :many
-SELECT id, hashed_key, limit_per_minute, created_at FROM api_keys
+SELECT id, hashed_key, window_size_seconds, requests_per_window, created_at FROM api_keys
 ORDER BY created_at DESC
 `
 
@@ -98,7 +102,8 @@ func (q *Queries) ListKeys(ctx context.Context) ([]ApiKey, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.HashedKey,
-			&i.LimitPerMinute,
+			&i.WindowSizeSeconds,
+			&i.RequestsPerWindow,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
