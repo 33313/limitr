@@ -1,4 +1,4 @@
-all: clean test itest run
+all: clean test run
 
 build:
 	@echo 'Building...'
@@ -14,12 +14,13 @@ run: build
 
 docker-run:
 	@echo 'Starting Docker...'
-	@docker compose up
+	@docker compose up --build
+
+docker-rebuild:
+	@echo 'Forcing a fresh Docker build...'
+	@docker compose build --no-cache app
+	@docker compose up --force-recreate
 
 test:
-	@echo "Testing..."
+	@echo 'Testing...'
 	@go test ./... -v
-
-itest:
-	@echo "Testing [integration]..."
-	@go test ./internal/database -v
