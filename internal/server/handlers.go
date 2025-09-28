@@ -121,11 +121,11 @@ func (s *Server) handleGetUsage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now().UnixMilli()
-	window_start := now - int64(window_seconds)
+	window_start_ms := now - (int64(window_seconds) * 1000)
 	count, err := s.Redis.ZCount(
 		r.Context(),
 		fmt.Sprintf(limiter.LIMITER_CACHE_KEY, hashed_key),
-		strconv.FormatInt(window_start, 10),
+		strconv.FormatInt(window_start_ms, 10),
 		strconv.FormatInt(now, 10),
 	).Result()
 
