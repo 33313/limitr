@@ -72,9 +72,9 @@ func (s *Server) handleGetHealth(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to ping database", http.StatusServiceUnavailable)
 		return
 	}
-	if err := s.Redis.Ping(r.Context()); err != nil {
+	if err := s.Redis.Ping(r.Context()).Err(); err != nil {
 		log.Print(err)
-		http.Error(w, "Failed to ping database", http.StatusServiceUnavailable)
+		http.Error(w, "Failed to ping Redis", http.StatusServiceUnavailable)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

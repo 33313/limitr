@@ -10,17 +10,19 @@ import (
 	"rate-limiter/internal/limiter"
 	"rate-limiter/internal/server"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
+)
+
+var (
+	ctx = context.Background()
 )
 
 func main() {
 	godotenv.Load()
 
-	var conn *pgx.Conn
-	ctx := context.Background()
-	queries, err := db.ConnectToDatabase(ctx, conn)
+	db_conn, err := db.ConnectToDatabase(ctx)
+	queries := db.New(db_conn)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,7 +33,7 @@ func main() {
 
 	l := limiter.New(rdb)
 
-	s := server.New(conn, queries, rdb, l)
+	s := server.New(db_conn, queries, rdb, l)
 
 	http.ListenAndServe(fmt.Sprintf(":%v", os.Getenv("PORT")), s.Router)
 }

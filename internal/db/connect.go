@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func ConnectToDatabase(ctx context.Context, conn *pgx.Conn) (*Queries, error) {
+func ConnectToDatabase(ctx context.Context) (*pgx.Conn, error) {
 	database := os.Getenv("DB_DATABASE")
 	password := os.Getenv("DB_PASSWORD")
 	username := os.Getenv("DB_USERNAME")
@@ -21,7 +21,5 @@ func ConnectToDatabase(ctx context.Context, conn *pgx.Conn) (*Queries, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn = db_conn
-	queries := New(db_conn)
-	return queries, nil
+	return db_conn, nil
 }
