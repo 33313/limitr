@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: final
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -41,7 +42,7 @@ services:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test:
-        ["CMD-SHELL", "sh -c 'pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}'"]
+        ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
       interval: 5s
       timeout: 5s
       retries: 3
@@ -66,16 +67,18 @@ services:
       - limitr
   migrate:
     container_name: limitr_migrate
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate_runner
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       GOOSE_MIGRATION_DIR: "./sql/migrations"
-      GOOSE_DBSTRING: "postgres://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}?sslmode=disable"
+      GOOSE_DBSTRING: "postgres://${DB_USERNAME:-limitr}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE:-limitr}?sslmode=disable"
       GOOSE_DRIVER: "postgres"
-    command: >
-      goose up
+    entrypoint: ["/usr/local/bin/goose", "up"]
     networks:
       - limitr
 

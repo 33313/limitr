@@ -1,26 +1,37 @@
-FROM golang:1.25-alpine AS build
-RUN apk add --no-cache git
+ARG GO_VERSION=1.25-bookworm
 
+# Build Goose
+FROM golang:${GO_VERSION} AS build_goose
+ARG GOOSE_VERSION=v3.25.0
+RUN apt-get update && apt-get install git -y
+WORKDIR /goose_src
+RUN git clone --depth 1 --branch ${GOOSE_VERSION} https://github.com/pressly/goose.git .
+RUN go build -tags="no_mysql no_sqlite3 no_ydb no_clickhouse no_mssql no_vertica" -o /go/bin/goose ./cmd/goose
+
+# Build Limitr
+FROM golang:${GO_VERSION} AS build_limitr
+ENV CGO_ENABLED=0
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
-
 COPY . .
-RUN go clean -cache -modcache -i -r
-RUN CGO_ENABLED=0 GOOS=linux go build -o limitr .
-RUN go install github.com/pressly/goose/v3/cmd/goose@latest
+RUN go build -ldflags="-s -w -buildid=" -o limitr .
 
-
-FROM alpine:latest
-
-WORKDIR /app
-COPY --from=build /app/limitr .
-COPY --from=build /go/bin/goose /usr/local/bin/goose
+# Run migrations
+FROM golang:${GO_VERSION} AS migrate_runner
+WORKDIR /migrate
+COPY --from=build_goose /go/bin/goose /usr/local/bin/goose
 COPY ./sql/migrations ./sql/migrations
 
-RUN adduser -D demo
-USER demo
+# Start Limitr
+FROM gcr.io/distroless/base-nossl AS final
+WORKDIR /app
+COPY --from=build_limitr /app/limitr .
 
+USER nobody
+
+ARG PORT=8080
+ENV PORT=${PORT}
 EXPOSE ${PORT}
 
-CMD ["./limitr"]
+ENTRYPOINT ["/app/limitr"]

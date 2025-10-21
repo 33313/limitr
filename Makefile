@@ -8,19 +8,23 @@ clean:
 	@echo 'Cleaning...'
 	@rm limitr
 
+test:
+	@echo 'Testing...'
+	@go test ./... -v
+
 run: build
 	@echo 'Starting...'
 	@./limitr
 
-docker-run:
+docker:
 	@echo 'Starting Docker...'
 	@docker compose up --build
+	@echo 'Stopping Docker...'
+	@docker compose down
 
 docker-rebuild:
 	@echo 'Forcing a fresh Docker build...'
 	@docker compose build --no-cache app
 	@docker compose up --force-recreate
-
-test:
-	@echo 'Testing...'
-	@go test ./... -v
+	@echo 'Stopping Docker...'
+	@docker compose down
