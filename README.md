@@ -1,6 +1,6 @@
-# ⏱️ imitr - High-Performance API Rate Limiter
+# ⏱️ limitr - High-Performance API Rate Limiter
 
-Limitr is an **API rate limiting service** built in Go, with PostgreSQL for API key management and Redis for low-latency request tracking.
+**limitr** is an API rate limiting service built in Go, with PostgreSQL for API key management and Redis for low-latency request tracking.
 It implements a **Sliding Window Log algorithm**, ensuring fair usage and preventing abuse in multi-tenant systems.
 
 ---
