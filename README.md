@@ -40,9 +40,11 @@ Prerequisites:
 # Clone this repo
 git clone https://github.com/33313/limitr.git && cd limitr
 
-# Start the app with GNU Make + Docker
+# Rename .env.template to .env (and edit it to your liking)
+mv .env.template .env 
+
+# Start the app with GNU Make + Docker (or use `docker compose up --build`)
 make docker
-# Or use `docker compose up --build`
 
 # Create an API key
 curl -X POST http://localhost:3000/keys -v
