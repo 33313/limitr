@@ -47,7 +47,7 @@ mv .env.template .env
 make docker
 
 # Create an API key
-curl -X POST http://localhost:3000/keys -v
+curl -X POST http://localhost:3333/keys -v
 # Example response: '{"api_key": "<YOUR_KEY>"}'
 
 # Use your key to make requests
